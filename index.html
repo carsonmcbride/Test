@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Avatar Bypass</title>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
+</head>
+<body style="margin:0; background:black;">
+    <script>
+        // This reads the ?room= URL parameter we will send from Python
+        const params = new URLSearchParams(window.location.search);
+        const tavusUrl = params.get('room');
+        
+        if (tavusUrl) {
+            const call = window.DailyIframe.createFrame({
+                iframeStyle: { width: '100vw', height: '100vh', border: 'none' }
+            });
+            call.join({ url: tavusUrl, userName: 'Analytics Assistant' });
+        }
+    </script>
+</body>
+</html>
