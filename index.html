@@ -2,11 +2,19 @@
 <body style="margin:0; background:black;"><script>
 const params = new URLSearchParams(window.location.search);
 if (params.get('room')) {
-    const call = window.DailyIframe.createFrame({ iframeStyle: { width: '100vw', height: '100vh', border: 'none' }});
-    call.join({ 
-        url: params.get('room'), 
-        userName: 'AI Assistant',
-        videoSource: false 
-    });
+    // 1. Manually ask the headless browser for its virtual microphone
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+        const virtualMicTrack = stream.getAudioTracks()[0];
+        
+        const call = window.DailyIframe.createFrame({ iframeStyle: { width: '100vw', height: '100vh', border: 'none' }});
+        
+        // 2. Pass the raw audio track directly to Daily to bypass its hardware scan
+        call.join({ 
+            url: params.get('room'), 
+            userName: 'AI Assistant',
+            videoSource: false,
+            audioSource: virtualMicTrack 
+        });
+    }).catch(e => console.error("Mic error:", e));
 }
 </script></body></html>
