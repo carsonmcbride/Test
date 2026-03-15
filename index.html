@@ -1,20 +1,46 @@
-<!DOCTYPE html><html><head><script src="https://unpkg.com/@daily-co/daily-js"></script></head>
-<body style="margin:0; background:black;"><script>
-const params = new URLSearchParams(window.location.search);
-if (params.get('room')) {
-    // 1. Manually ask the headless browser for its virtual microphone
-    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-        const virtualMicTrack = stream.getAudioTracks()[0];
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
+</head>
+<body style="margin:0; background:black; color:white; font-family:sans-serif; display:flex; justify-content:center; align-items:center; height:100vh; text-align:center;">
+    <h2 id="status">🤖 Booting AI Brain...</h2>
+    
+    <script>
+        const statusEl = document.getElementById('status');
+        const params = new URLSearchParams(window.location.search);
+        const roomUrl = params.get('room');
         
-        const call = window.DailyIframe.createFrame({ iframeStyle: { width: '100vw', height: '100vh', border: 'none' }});
-        
-        // 2. Pass the raw audio track directly to Daily to bypass its hardware scan
-        call.join({ 
-            url: params.get('room'), 
-            userName: 'AI Assistant',
-            videoSource: false,
-            audioSource: virtualMicTrack 
-        });
-    }).catch(e => console.error("Mic error:", e));
-}
-</script></body></html>
+        if (!roomUrl) {
+            statusEl.innerText = "❌ Error: No room URL provided from Python script.";
+        } else {
+            statusEl.innerText = "⏳ Requesting virtual microphone...";
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then((stream) => {
+                    statusEl.innerText = "✅ Mic found! Connecting to Tavus...";
+                    const virtualMicTrack = stream.getAudioTracks()[0];
+                    
+                    const call = window.DailyIframe.createFrame({ 
+                        iframeStyle: { width: '100vw', height: '100vh', border: 'none', position: 'absolute', top: 0, left: 0 }
+                    });
+                    
+                    call.join({ 
+                        url: roomUrl, 
+                        userName: 'AI Assistant',
+                        videoSource: false,
+                        audioSource: virtualMicTrack 
+                    }).then(() => {
+                        // Once successfully joined, hide the debug text
+                        statusEl.style.display = 'none'; 
+                    }).catch(err => {
+                        statusEl.innerText = "❌ Daily.co Join Error: " + err.message;
+                    });
+                })
+                .catch(e => {
+                    statusEl.innerText = "❌ Mic Error: " + e.name + " - " + e.message;
+                });
+        }
+    </script>
+</body>
+</html>
